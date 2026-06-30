@@ -1,0 +1,13 @@
+{
+  "domain": "bluebot",
+  "name": "Bluebot Water Meter",
+  "codeowners": ["@salanki"],
+  "config_flow": true,
+  "documentation": "https://github.com/salanki/hass-bluebot",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/salanki/hass-bluebot/issues",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "version": "0.1.0"
+}

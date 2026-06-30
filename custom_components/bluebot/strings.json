@@ -1,0 +1,51 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Enter a Bluebot API key generated in FloDash (Settings → API keys). You can paste the full key; only the part after the dot is required.",
+        "data": {
+          "api_key": "API key"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The Bluebot API key was rejected. Enter a current key for the same organization.",
+        "data": {
+          "api_key": "API key"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "That API key was rejected by Bluebot",
+      "cannot_connect": "Could not reach the Bluebot API"
+    },
+    "abort": {
+      "already_configured": "This Bluebot organization is already configured",
+      "wrong_account": "That API key is for a different Bluebot organization",
+      "reauth_successful": "Bluebot API key updated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Tune how often Home Assistant polls Bluebot.",
+        "data": {
+          "flow_scan_interval": "Flow poll interval (seconds)",
+          "totals_scan_interval": "Total volume poll interval (seconds)"
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "flow_rate": { "name": "Flow rate" },
+      "total_volume": { "name": "Total volume" },
+      "quality": { "name": "Signal quality" },
+      "signal_strength": { "name": "Signal strength" },
+      "rssi": { "name": "Network RSSI" },
+      "last_datapoint": { "name": "Last datapoint" }
+    },
+    "binary_sensor": {
+      "flowing": { "name": "Flowing" }
+    }
+  }
+}

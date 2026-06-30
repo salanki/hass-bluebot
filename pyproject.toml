@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pybluebot"
+version = "0.1.0"
+description = "Async Python client for the Bluebot water-flow-meter cloud REST API"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Peter Salanki" }]
+dependencies = ["aiohttp>=3.9"]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.23",
+    "pytest-homeassistant-custom-component>=0.13",
+    "ruff>=0.4",
+    "homeassistant>=2024.11",
+]
+
+[tool.setuptools.package-dir]
+pybluebot = "custom_components/bluebot/pybluebot"
+
+[tool.setuptools.packages]
+find = { where = ["custom_components/bluebot"], include = ["pybluebot*"] }
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
+# First entry lets tests import ``pybluebot`` as a top-level package; the second
+# ("." = repo root) lets them import ``custom_components.bluebot`` for the HA
+# integration tests.
+pythonpath = ["custom_components/bluebot", "."]
+addopts = "-ra -m 'not live'"
+markers = [
+    "live: read-only tests that hit the real Bluebot API (opt-in, require BLUEBOT_API_KEY in env)",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

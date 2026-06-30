@@ -1,0 +1,87 @@
+# Example Home Assistant dashboard for Bluebot Water Meter.
+#
+# Generic — replace the `sensor.<meter>_*` / `binary_sensor.<meter>_flowing`
+# entity ids with your own meter names (Settings → Devices & Services → Bluebot).
+#
+# The "today" tile uses a utility_meter helper. Add one per meter, either in the
+# UI (Settings → Devices & Services → Helpers → Utility Meter) or in YAML:
+#
+#   # configuration.yaml
+#   utility_meter:
+#     pool_hx_today:
+#       source: sensor.pool_hx_total_volume
+#       cycle: daily
+#
+# Paste the view below into a dashboard in raw-config (edit dashboard → ⋮ →
+# "Edit in YAML"), or merge the `cards:` into an existing view.
+
+title: Water
+views:
+  - title: Water
+    path: water
+    icon: mdi:water
+    cards:
+      - type: vertical-stack
+        title: Pool HX
+        cards:
+          - type: gauge
+            entity: sensor.pool_hx_flow_rate
+            name: Flow rate
+            unit: gal/min
+            min: 0
+            max: 30
+            severity:
+              green: 0
+              yellow: 20
+              red: 27
+          - type: glance
+            columns: 3
+            entities:
+              - entity: binary_sensor.pool_hx_flowing
+                name: Flowing
+              - entity: sensor.pool_hx_today
+                name: Today
+              - entity: sensor.pool_hx_total_volume
+                name: Total
+          - type: history-graph
+            hours_to_show: 6
+            entities:
+              - sensor.pool_hx_flow_rate
+
+      - type: vertical-stack
+        title: Pool Auto Fill
+        cards:
+          - type: gauge
+            entity: sensor.pool_auto_fill_flow_rate
+            name: Flow rate
+            unit: gal/min
+            min: 0
+            max: 30
+          - type: glance
+            columns: 3
+            entities:
+              - entity: binary_sensor.pool_auto_fill_flowing
+                name: Flowing
+              - entity: sensor.pool_auto_fill_today
+                name: Today
+              - entity: sensor.pool_auto_fill_total_volume
+                name: Total
+
+      - type: vertical-stack
+        title: Water Heater
+        cards:
+          - type: gauge
+            entity: sensor.water_heater_flow_rate
+            name: Flow rate
+            unit: gal/min
+            min: 0
+            max: 30
+          - type: glance
+            columns: 3
+            entities:
+              - entity: binary_sensor.water_heater_flowing
+                name: Flowing
+              - entity: sensor.water_heater_today
+                name: Today
+              - entity: sensor.water_heater_total_volume
+                name: Total
