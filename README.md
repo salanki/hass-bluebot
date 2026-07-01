@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="custom_components/bluebot/brand/icon.png" alt="Bluebot" width="140">
+</p>
+
 # Bluebot Water Meter — Home Assistant integration
 
 A custom [Home Assistant](https://www.home-assistant.io/) integration for
