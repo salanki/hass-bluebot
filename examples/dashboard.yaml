@@ -3,85 +3,101 @@
 # Generic — replace the `sensor.<meter>_*` / `binary_sensor.<meter>_flowing`
 # entity ids with your own meter names (Settings → Devices & Services → Bluebot).
 #
-# The "today" tile uses a utility_meter helper. Add one per meter, either in the
-# UI (Settings → Devices & Services → Helpers → Utility Meter) or in YAML:
+# "Today" is a native sensor from the integration (the meter's own daily rollup),
+# so no utility_meter helper is needed. The daily-usage graph uses a
+# statistics-graph card on the cumulative `total_volume` sensor (stat_types:
+# change), which HA derives automatically from long-term statistics.
 #
-#   # configuration.yaml
-#   utility_meter:
-#     pool_hx_today:
-#       source: sensor.pool_hx_total_volume
-#       cycle: daily
-#
-# Paste the view below into a dashboard in raw-config (edit dashboard → ⋮ →
-# "Edit in YAML"), or merge the `cards:` into an existing view.
+# Paste into a dashboard in raw-config (edit dashboard → ⋮ → "Edit in YAML").
 
 title: Water
 views:
   - title: Water
     path: water
-    icon: mdi:water
-    cards:
-      - type: vertical-stack
-        title: Pool HX
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
         cards:
+          - type: heading
+            heading: Pool HX
+            icon: mdi:pool
           - type: gauge
             entity: sensor.pool_hx_flow_rate
             name: Flow rate
-            unit: gal/min
+            needle: true
             min: 0
             max: 30
-            severity:
-              green: 0
-              yellow: 20
-              red: 27
-          - type: glance
-            columns: 3
-            entities:
-              - entity: binary_sensor.pool_hx_flowing
-                name: Flowing
-              - entity: sensor.pool_hx_today
-                name: Today
-              - entity: sensor.pool_hx_total_volume
-                name: Total
-          - type: history-graph
-            hours_to_show: 6
-            entities:
-              - sensor.pool_hx_flow_rate
+            severity: { green: 0, yellow: 20, red: 27 }
+          - type: tile
+            entity: binary_sensor.pool_hx_flowing
+            name: Flowing
+          - type: tile
+            entity: sensor.pool_hx_today
+            name: Today
+          - type: tile
+            entity: sensor.pool_hx_total_volume
+            name: Total
 
-      - type: vertical-stack
-        title: Pool Auto Fill
+      - type: grid
         cards:
+          - type: heading
+            heading: Pool Auto Fill
+            icon: mdi:water-plus
           - type: gauge
             entity: sensor.pool_auto_fill_flow_rate
             name: Flow rate
-            unit: gal/min
+            needle: true
             min: 0
             max: 30
-          - type: glance
-            columns: 3
-            entities:
-              - entity: binary_sensor.pool_auto_fill_flowing
-                name: Flowing
-              - entity: sensor.pool_auto_fill_today
-                name: Today
-              - entity: sensor.pool_auto_fill_total_volume
-                name: Total
+            severity: { green: 0, yellow: 20, red: 27 }
+          - type: tile
+            entity: binary_sensor.pool_auto_fill_flowing
+            name: Flowing
+          - type: tile
+            entity: sensor.pool_auto_fill_today
+            name: Today
+          - type: tile
+            entity: sensor.pool_auto_fill_total_volume
+            name: Total
 
-      - type: vertical-stack
-        title: Water Heater
+      - type: grid
         cards:
+          - type: heading
+            heading: Water Heater
+            icon: mdi:water-boiler
           - type: gauge
             entity: sensor.water_heater_flow_rate
             name: Flow rate
-            unit: gal/min
+            needle: true
             min: 0
             max: 30
-          - type: glance
-            columns: 3
+            severity: { green: 0, yellow: 20, red: 27 }
+          - type: tile
+            entity: binary_sensor.water_heater_flowing
+            name: Flowing
+          - type: tile
+            entity: sensor.water_heater_today
+            name: Today
+          - type: tile
+            entity: sensor.water_heater_total_volume
+            name: Total
+
+      # Daily water usage per meter (gallons/day), from long-term statistics.
+      - type: grid
+        column_span: 3
+        cards:
+          - type: heading
+            heading: Daily usage
+            icon: mdi:chart-bar
+          - type: statistics-graph
+            title: Water per day
+            chart_type: bar
+            period: day
+            days_to_show: 30
+            stat_types:
+              - change
             entities:
-              - entity: binary_sensor.water_heater_flowing
-                name: Flowing
-              - entity: sensor.water_heater_today
-                name: Today
-              - entity: sensor.water_heater_total_volume
-                name: Total
+              - sensor.pool_hx_total_volume
+              - sensor.pool_auto_fill_total_volume
+              - sensor.water_heater_total_volume

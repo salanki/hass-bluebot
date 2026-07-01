@@ -39,6 +39,7 @@
     "sensor": {
       "flow_rate": { "name": "Flow rate" },
       "total_volume": { "name": "Total volume" },
+      "today_volume": { "name": "Today" },
       "quality": { "name": "Signal quality" },
       "signal_strength": { "name": "Signal strength" },
       "rssi": { "name": "Network RSSI" },

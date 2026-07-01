@@ -8,7 +8,7 @@ from .client import (
     normalize_api_key,
 )
 from .exceptions import BluebotAuthError, BluebotConnectionError, BluebotError
-from .models import Device, DeviceState, LatestDatapoint
+from .models import Device, LatestDatapoint, MeterTotals
 from .util import parse_timestamp, to_bool, to_float
 
 __all__ = [
@@ -20,8 +20,8 @@ __all__ = [
     "BluebotConnectionError",
     "BluebotError",
     "Device",
-    "DeviceState",
     "LatestDatapoint",
+    "MeterTotals",
     "normalize_api_key",
     "parse_timestamp",
     "to_bool",

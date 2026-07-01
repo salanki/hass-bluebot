@@ -26,6 +26,7 @@ Each meter exposes:
 |---|---|---|
 | Flow rate | `sensor` | Real-time flow in gallons/minute. Reads `0` when the meter has been idle (no recent datapoint); `unavailable` if the cloud poll fails. |
 | Total volume | `sensor` (`total_increasing`) | Lifetime cumulative gallons — usable in the Energy/Water dashboard; HA derives daily/weekly/monthly. |
+| Today | `sensor` | Gallons used since local midnight — the meter's own daily rollup (Bluebot `resolution=day` in the meter's timezone). Populates immediately, resets at local midnight, survives restarts (no `utility_meter` helper needed). |
 | Flowing | `binary_sensor` (`running`) | On while water is actively moving. |
 | Signal quality | `sensor` (diagnostic) | Datapoint quality %. |
 | Signal strength | `sensor` (diagnostic, disabled by default) | Radio signal %. |
@@ -62,10 +63,13 @@ pick up newly-added meters, reload the integration.
 ## Example dashboard
 
 A ready-to-use, generic example is in [`examples/dashboard.yaml`](examples/dashboard.yaml):
-one card per meter with a flow gauge, a flowing indicator, total volume, and a
-daily-usage tile (via a `utility_meter` helper).
+one card per meter (flow gauge, flowing indicator, Today, and total volume) plus a
+per-day usage bar graph (`statistics-graph`, `change` per day) across all meters.
 
 ![Example dashboard](assets/dashboard.png)
+
+> The daily-usage graph builds up from long-term statistics once the sensors have
+> been recording (HA compiles these hourly), so it fills in over the first day.
 
 ## How it works
 

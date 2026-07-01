@@ -85,6 +85,7 @@ async def async_setup_entry(
     for device in data.devices:
         entities.append(BluebotFlowRateSensor(data.flow, device))
         entities.append(BluebotTotalVolumeSensor(data.totals, device))
+        entities.append(BluebotTodayVolumeSensor(data.totals, device))
         entities.extend(
             BluebotDiagSensor(data.flow, device, desc) for desc in DIAG_SENSORS
         )
@@ -143,7 +144,30 @@ class BluebotTotalVolumeSensor(BluebotEntity, SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        return (self.coordinator.data or {}).get(self._device.id)
+        totals = (self.coordinator.data or {}).get(self._device.id)
+        return totals.total if totals else None
+
+
+class BluebotTodayVolumeSensor(BluebotEntity, SensorEntity):
+    """Gallons used since local midnight — the meter's own daily rollup.
+
+    Sourced from the Bluebot ``resolution=day`` API in the meter's timezone, so
+    it matches Bluebot's app, resets at local midnight, and survives restarts.
+    """
+
+    _attr_translation_key = "today_volume"
+    _attr_device_class = SensorDeviceClass.WATER
+    _attr_native_unit_of_measurement = UnitOfVolume.GALLONS
+    _attr_state_class = SensorStateClass.TOTAL_INCREASING
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, coordinator: BluebotTotalsCoordinator, device: Device) -> None:
+        super().__init__(coordinator, device, "today_volume")
+
+    @property
+    def native_value(self) -> float | None:
+        totals = (self.coordinator.data or {}).get(self._device.id)
+        return totals.today if totals else None
 
 
 class BluebotDiagSensor(BluebotEntity, SensorEntity):

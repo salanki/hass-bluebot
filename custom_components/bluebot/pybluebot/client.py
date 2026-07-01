@@ -167,3 +167,28 @@ class BluebotClient:
             return float(value) if value is not None else None
         except (TypeError, ValueError):
             return None
+
+    async def async_get_today_volume(
+        self, device_id: str, timezone: str | None, from_iso: str
+    ) -> float:
+        """Return gallons since local midnight for one meter.
+
+        Uses the server-side daily rollup (``resolution=day``) with ``timezone``
+        so the day boundary matches the meter's own timezone — the same figure
+        Bluebot's app shows. ``from_iso`` is local midnight today. Returns 0.0
+        when there is no flow yet today.
+        """
+        params: dict[str, object] = {"resolution": "day", "from": from_iso}
+        if timezone:
+            params["timezone"] = timezone
+        data = await self._request(f"/flow/datapoints/{device_id}", params=params)
+        rows = data.get("data", []) if isinstance(data, dict) else []
+        total = 0.0
+        for row in rows:
+            value = row.get("total_flow_amount")
+            if value is not None:
+                try:
+                    total += float(value)
+                except (TypeError, ValueError):
+                    continue
+        return total

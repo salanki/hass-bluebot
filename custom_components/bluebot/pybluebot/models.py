@@ -89,17 +89,16 @@ class LatestDatapoint:
 
 
 @dataclass(frozen=True)
-class DeviceState:
-    """Per-meter snapshot the coordinators expose to entities.
+class MeterTotals:
+    """Volume rollups the totals coordinator exposes per meter.
 
-    ``latest`` is the newest datapoint (may be None if the meter has never
-    reported); ``total_volume`` is the lifetime cumulative gallons from
-    ``resolution=total`` (filled by the totals coordinator, None until first
-    fetched).
+    ``total`` is lifetime cumulative gallons (``resolution=total``);
+    ``today`` is gallons since local midnight in the meter's timezone
+    (``resolution=day``). Either may be None if not yet fetched.
     """
 
-    latest: LatestDatapoint | None = None
-    total_volume: float | None = None
+    total: float | None = None
+    today: float | None = None
 
 
-__all__ = ["Device", "LatestDatapoint", "DeviceState"]
+__all__ = ["Device", "LatestDatapoint", "MeterTotals"]
