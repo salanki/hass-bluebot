@@ -63,8 +63,8 @@ pick up newly-added meters, reload the integration.
 ## Example dashboard
 
 A ready-to-use, generic example is in [`examples/dashboard.yaml`](examples/dashboard.yaml):
-one card per meter (flow gauge, flowing indicator, Today, and total volume) plus a
-per-day usage bar graph (`statistics-graph`, `change` per day) across all meters.
+one card per meter — flow gauge, flowing indicator, Today, total volume, and a
+per-day usage bar graph (`statistics-graph`, `change` per day) for that meter.
 
 ![Example dashboard](assets/dashboard.png)
 

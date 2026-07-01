@@ -38,6 +38,14 @@ views:
           - type: tile
             entity: sensor.pool_hx_total_volume
             name: Total
+          - type: statistics-graph
+            title: Water per day (gal)
+            chart_type: bar
+            period: day
+            days_to_show: 30
+            stat_types: [change]
+            entities:
+              - sensor.pool_hx_total_volume
 
       - type: grid
         cards:
@@ -60,6 +68,14 @@ views:
           - type: tile
             entity: sensor.pool_auto_fill_total_volume
             name: Total
+          - type: statistics-graph
+            title: Water per day (gal)
+            chart_type: bar
+            period: day
+            days_to_show: 30
+            stat_types: [change]
+            entities:
+              - sensor.pool_auto_fill_total_volume
 
       - type: grid
         cards:
@@ -82,22 +98,11 @@ views:
           - type: tile
             entity: sensor.water_heater_total_volume
             name: Total
-
-      # Daily water usage per meter (gallons/day), from long-term statistics.
-      - type: grid
-        column_span: 3
-        cards:
-          - type: heading
-            heading: Daily usage
-            icon: mdi:chart-bar
           - type: statistics-graph
-            title: Water per day
+            title: Water per day (gal)
             chart_type: bar
             period: day
             days_to_show: 30
-            stat_types:
-              - change
+            stat_types: [change]
             entities:
-              - sensor.pool_hx_total_volume
-              - sensor.pool_auto_fill_total_volume
               - sensor.water_heater_total_volume
