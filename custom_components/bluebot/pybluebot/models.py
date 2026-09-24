@@ -61,8 +61,8 @@ class LatestDatapoint:
     """Most recent raw datapoint for a meter (from ``GET /flow/latest``).
 
     ``flow_rate`` is US gallons/minute, ``flow_amount`` is US gallons, and
-    ``flow_duration`` is milliseconds. The meter only emits datapoints while
-    water is moving, so a stale ``recorded_at`` means "no flow".
+    ``flow_duration`` is milliseconds. Meters emit zero-flow datapoints too;
+    a stale ``recorded_at`` means cloud reporting has stopped, not zero flow.
     """
 
     recorded_at: datetime | None

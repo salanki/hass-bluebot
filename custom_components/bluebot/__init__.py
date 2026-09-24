@@ -19,6 +19,7 @@ from .const import (
     CONF_TOTALS_SCAN_INTERVAL,
     DEFAULT_FLOW_SCAN_INTERVAL,
     DEFAULT_TOTALS_SCAN_INTERVAL,
+    FLOW_SCAN_MAX,
 )
 from .coordinator import BluebotFlowCoordinator, BluebotTotalsCoordinator
 from .pybluebot import (
@@ -66,11 +67,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BluebotConfigEntry) -> b
         _LOGGER.warning("Bluebot account has no active flow meters")
 
     flow = BluebotFlowCoordinator(
-        hass, entry, client, devices,
-        _interval(entry, CONF_FLOW_SCAN_INTERVAL, DEFAULT_FLOW_SCAN_INTERVAL),
+        hass,
+        entry,
+        client,
+        devices,
+        min(
+            _interval(entry, CONF_FLOW_SCAN_INTERVAL, DEFAULT_FLOW_SCAN_INTERVAL),
+            timedelta(seconds=FLOW_SCAN_MAX),
+        ),
     )
     totals = BluebotTotalsCoordinator(
-        hass, entry, client, devices,
+        hass,
+        entry,
+        client,
+        devices,
         _interval(entry, CONF_TOTALS_SCAN_INTERVAL, DEFAULT_TOTALS_SCAN_INTERVAL),
     )
     await flow.async_config_entry_first_refresh()

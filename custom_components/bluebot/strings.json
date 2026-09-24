@@ -46,7 +46,8 @@
       "last_datapoint": { "name": "Last datapoint" }
     },
     "binary_sensor": {
-      "flowing": { "name": "Flowing" }
+      "flowing": { "name": "Flowing" },
+      "online": { "name": "Online" }
     }
   }
 }

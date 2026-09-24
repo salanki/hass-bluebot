@@ -12,15 +12,17 @@ Two coordinators with different cadences share one client:
 from __future__ import annotations
 
 import logging
-from datetime import timedelta
+from collections.abc import Callable
+from datetime import datetime, timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import CLOUD_OFFLINE_AFTER, DOMAIN
 from .pybluebot import (
     BluebotAuthError,
     BluebotClient,
@@ -55,10 +57,52 @@ class BluebotFlowCoordinator(DataUpdateCoordinator[dict[str, LatestDatapoint | N
         )
         self.client = client
         self._device_ids = [d.id for d in devices]
+        self._cancel_expiry: Callable[[], None] | None = None
+        entry.async_on_unload(self._async_cancel_expiry)
+
+    def is_online(self, device_id: str) -> bool | None:
+        """Match FloDash's timestamp rule; no timestamp means unknown."""
+        datapoint = (self.data or {}).get(device_id)
+        if datapoint is None or datapoint.recorded_at is None:
+            return None
+        return dt_util.utcnow() - datapoint.recorded_at < CLOUD_OFFLINE_AFTER
+
+    @callback
+    def _async_cancel_expiry(self) -> None:
+        if self._cancel_expiry is not None:
+            self._cancel_expiry()
+            self._cancel_expiry = None
+
+    @callback
+    def _async_schedule_expiry(
+        self, data: dict[str, LatestDatapoint | None]
+    ) -> None:
+        """Expire cached readings even when successful polls return identical data."""
+        self._async_cancel_expiry()
+        now = dt_util.utcnow()
+        deadlines = [
+            dp.recorded_at + CLOUD_OFFLINE_AFTER
+            for dp in data.values()
+            if dp is not None
+            and dp.recorded_at is not None
+            and dp.recorded_at + CLOUD_OFFLINE_AFTER > now
+        ]
+        if deadlines:
+            self._cancel_expiry = async_track_point_in_utc_time(
+                self.hass, self._async_expire, min(deadlines)
+            )
+
+    @callback
+    def _async_expire(self, _now: datetime) -> None:
+        self._cancel_expiry = None
+        self.async_update_listeners()
+        self._async_schedule_expiry(self.data or {})
 
     async def _async_update_data(self) -> dict[str, LatestDatapoint | None]:
         try:
-            return await self.client.async_get_latest(self._device_ids)
+            data = await self.client.async_get_latest(self._device_ids)
+            self._async_schedule_expiry(data)
+            return data
         except BluebotAuthError as err:
             raise ConfigEntryAuthFailed(str(err)) from err
         except (BluebotConnectionError, BluebotError) as err:

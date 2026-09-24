@@ -39,6 +39,13 @@ def _prewarm_aiohttp_shutdown_thread():
     yield
 
 
+@pytest.fixture(autouse=True)
+def _ha_defaults(hass, enable_custom_integrations):
+    from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+
+    hass.config.units = US_CUSTOMARY_SYSTEM
+
+
 @pytest.fixture
 def setup_integration(hass, enable_custom_integrations, monkeypatch):
     """Set up the integration backed by a FakeClient; returns (entry, client)."""

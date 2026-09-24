@@ -19,7 +19,7 @@ async def test_entities_created(setup_integration, hass):
     assert hass.states.get("binary_sensor.pool_hx_flowing").state == "on"
 
 
-async def test_stale_datapoint_reads_zero(setup_integration, hass):
+async def test_stale_datapoint_is_offline(setup_integration, hass):
     device = make_device(device_id="d1", serial="BB1")
     client = FakeClient(
         devices=[device],
@@ -28,9 +28,10 @@ async def test_stale_datapoint_reads_zero(setup_integration, hass):
     )
     await setup_integration(client)
 
-    # Stale (1h old) -> meter idle -> 0 GPM and not flowing.
-    assert hass.states.get("sensor.pool_hx_flow_rate").state == "0.0"
-    assert hass.states.get("binary_sensor.pool_hx_flowing").state == "off"
+    # Stale data is a cloud outage, never evidence of zero flow.
+    assert hass.states.get("sensor.pool_hx_flow_rate").state == "unavailable"
+    assert hass.states.get("binary_sensor.pool_hx_flowing").state == "unavailable"
+    assert hass.states.get("binary_sensor.pool_hx_online").state == "off"
 
 
 async def test_no_datapoint_is_unknown(setup_integration, hass):
@@ -38,7 +39,8 @@ async def test_no_datapoint_is_unknown(setup_integration, hass):
     client = FakeClient(devices=[device], latest={"d1": None}, totals={})
     await setup_integration(client)
 
-    assert hass.states.get("sensor.pool_hx_flow_rate").state == "unknown"
+    assert hass.states.get("sensor.pool_hx_flow_rate").state == "unavailable"
+    assert hass.states.get("binary_sensor.pool_hx_online").state == "unknown"
     # Total volume with no data is unavailable, not a misleading 0.
     assert hass.states.get("sensor.pool_hx_total_volume").state == "unavailable"
 

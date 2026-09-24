@@ -21,12 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from . import BluebotConfigEntry
-from .const import FRESHNESS_POLL_FACTOR, MIN_FRESHNESS
 from .coordinator import BluebotFlowCoordinator, BluebotTotalsCoordinator
-from .entity import BluebotEntity
+from .entity import BluebotEntity, BluebotLiveEntity
 from .pybluebot import Device, LatestDatapoint
 
 
@@ -92,13 +90,11 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BluebotFlowRateSensor(BluebotEntity, SensorEntity):
+class BluebotFlowRateSensor(BluebotLiveEntity, SensorEntity):
     """Real-time flow rate in gallons/minute.
 
-    Reports the latest datapoint's rate while it is fresh; once the newest
-    datapoint ages past the freshness window the meter is idle, so the value is
-    0. On a failed poll the entity goes unavailable (handled by the coordinator)
-    rather than publishing a misleading 0.
+    Stale or missing cloud readings and failed polls are unavailable. Zero is
+    reported only when it is the value of a fresh measurement.
     """
 
     _attr_translation_key = "flow_rate"
@@ -111,18 +107,10 @@ class BluebotFlowRateSensor(BluebotEntity, SensorEntity):
         super().__init__(coordinator, device, "flow_rate")
 
     @property
-    def _freshness(self):
-        interval = self.coordinator.update_interval or MIN_FRESHNESS
-        return max(MIN_FRESHNESS, FRESHNESS_POLL_FACTOR * interval)
-
-    @property
     def native_value(self) -> float | None:
         datapoint = (self.coordinator.data or {}).get(self._device.id)
         if datapoint is None or datapoint.recorded_at is None:
             return None
-        age = dt_util.utcnow() - datapoint.recorded_at
-        if age > self._freshness:
-            return 0.0
         return datapoint.flow_rate
 
 

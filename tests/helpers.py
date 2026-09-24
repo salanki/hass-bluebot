@@ -70,6 +70,9 @@ class FakeClient:
     async def async_get_latest(self, ids):
         return {i: self.latest.get(i) for i in ids}
 
+    async def async_get_today_volume(self, device_id, timezone, from_iso):
+        return self.totals.get(device_id, 0.0)
+
     async def async_get_total_volume(self, device_id: str):
         return self.totals.get(device_id)
 

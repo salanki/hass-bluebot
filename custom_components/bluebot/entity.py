@@ -38,3 +38,11 @@ class BluebotEntity(CoordinatorEntity[BaseCoordinatorEntity]):
         base = device.serial_number or device.id
         self._attr_unique_id = f"{base}_{key}"
         self._attr_device_info = device_info(device)
+
+
+class BluebotLiveEntity(BluebotEntity):
+    """Live flow is usable only while the meter is reporting to the cloud."""
+
+    @property
+    def available(self) -> bool:
+        return super().available and self.coordinator.is_online(self._device.id) is True

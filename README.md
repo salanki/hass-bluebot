@@ -28,10 +28,11 @@ Each meter exposes:
 
 | Entity | Type | Description |
 |---|---|---|
-| Flow rate | `sensor` | Real-time flow in gallons/minute. Reads `0` when the meter has been idle (no recent datapoint); `unavailable` if the cloud poll fails. |
+| Flow rate | `sensor` | Real-time flow in gallons/minute. Reads `0` only from a fresh zero-flow measurement; `unavailable` when cloud reporting is offline or the poll fails. |
 | Total volume | `sensor` (`total_increasing`) | Lifetime cumulative gallons — usable in the Energy/Water dashboard; HA derives daily/weekly/monthly. |
 | Today | `sensor` | Gallons used since local midnight — the meter's own daily rollup (Bluebot `resolution=day` in the meter's timezone). Populates immediately, resets at local midnight, survives restarts (no `utility_meter` helper needed). |
-| Flowing | `binary_sensor` (`running`) | On while water is actively moving. |
+| Flowing | `binary_sensor` (`running`) | On while water is actively moving; unavailable when cloud reporting is offline. |
+| Online | `binary_sensor` (`connectivity`, diagnostic) | FloDash cloud reporting status: on when the latest measurement is less than 60 seconds old, off when stale; unknown without a timestamp, unavailable if the API request fails. |
 | Signal quality | `sensor` (diagnostic) | Datapoint quality %. |
 | Signal strength | `sensor` (diagnostic, disabled by default) | Radio signal %. |
 | Network RSSI | `sensor` (diagnostic, disabled by default) | Network RSSI in dBm. |
@@ -60,7 +61,8 @@ pick up newly-added meters, reload the integration.
 ### Options
 
 - **Flow poll interval** (default 30 s) — how often real-time flow is fetched
-  (one request covers all meters).
+  (one request covers all meters). Range 10–30 s; older options above 30 s
+  are capped to preserve the 60-second connectivity check.
 - **Total volume poll interval** (default 5 min) — how often cumulative totals
   are refreshed.
 
@@ -80,9 +82,21 @@ per-day usage bar graph (`statistics-graph`, `change` per day) for that meter.
 - A fast coordinator polls `GET /flow/latest` once per cycle for all meters
   (real-time flow). A slower coordinator polls `GET /flow/datapoints/{id}?resolution=total`
   per meter for the cumulative volume.
-- Bluebot meters only emit datapoints **while water flows**, so a stale latest
-  datapoint means "idle" — the flow sensor then reads `0`, while a failed poll
-  marks entities `unavailable` instead.
+- Meters send fresh zero-flow datapoints while idle. FloDash derives its online
+  status from `lastDatapoint.recordedAt` returned by `/flow/latest`, rather than
+  Wi-Fi connectivity or ping. The integration follows the same rule: online
+  while the timestamp is less than 60 seconds old. A local expiry timer also
+  handles repeated successful polls returning the same cached datapoint.
+- Offline meters have unavailable Flow rate and Flowing entities, preserving
+  totals and the last timestamp for diagnostics. Missing flow values stay
+  unknown; they never imply zero. Online exposes `last_datapoint` and
+  `offline_after_seconds` attributes.
+- Gate flow alerts on Online being `on` and a known flow state. A meter can
+  answer local pings while cloud reporting is offline. Missing timestamps yield
+  unknown Online status; failed API requests make it unavailable, which means
+  cloud status cannot be determined. Fresh data restores normal flow reporting.
+- Version 0.2.0 replaces the old incorrect stale-means-idle behavior. Restart
+  Home Assistant after updating the integration's Python files.
 
 ## Data update & limitations
 

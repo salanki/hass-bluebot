@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResultType
-from pybluebot import BluebotAuthError, BluebotConnectionError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.bluebot.const import (
@@ -13,6 +12,7 @@ from custom_components.bluebot.const import (
     CONF_FLOW_SCAN_INTERVAL,
     DOMAIN,
 )
+from custom_components.bluebot.pybluebot import BluebotAuthError, BluebotConnectionError
 
 
 def _patch_validate(monkeypatch, result):
@@ -76,7 +76,11 @@ async def test_reauth_flow_updates_key(hass, monkeypatch):
     entry.add_to_hass(hass)
     _patch_validate(monkeypatch, "org-1")
 
-    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data=entry.data,
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "new-key"}
     )
@@ -92,7 +96,11 @@ async def test_reauth_wrong_account_aborts(hass, monkeypatch):
     entry.add_to_hass(hass)
     _patch_validate(monkeypatch, "org-2")
 
-    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH, "entry_id": entry.entry_id},
+        data=entry.data,
+    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_API_KEY: "other-org"}
     )
@@ -105,7 +113,7 @@ async def test_options_flow(hass):
     entry.add_to_hass(hass)
     result = await hass.config_entries.options.async_init(entry.entry_id)
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], {CONF_FLOW_SCAN_INTERVAL: 45, "totals_scan_interval": 600}
+        result["flow_id"], {CONF_FLOW_SCAN_INTERVAL: 20, "totals_scan_interval": 600}
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.options[CONF_FLOW_SCAN_INTERVAL] == 45
+    assert entry.options[CONF_FLOW_SCAN_INTERVAL] == 20

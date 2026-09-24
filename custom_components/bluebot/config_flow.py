@@ -117,9 +117,12 @@ class BluebotOptionsFlow(OptionsFlow):
             {
                 vol.Optional(
                     CONF_FLOW_SCAN_INTERVAL,
-                    default=options.get(
-                        CONF_FLOW_SCAN_INTERVAL,
-                        int(DEFAULT_FLOW_SCAN_INTERVAL.total_seconds()),
+                    default=min(
+                        options.get(
+                            CONF_FLOW_SCAN_INTERVAL,
+                            int(DEFAULT_FLOW_SCAN_INTERVAL.total_seconds()),
+                        ),
+                        FLOW_SCAN_MAX,
                     ),
                 ): vol.All(int, vol.Range(min=FLOW_SCAN_MIN, max=FLOW_SCAN_MAX)),
                 vol.Optional(
